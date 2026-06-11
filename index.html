@@ -442,10 +442,10 @@
     return dateKey(t.getFullYear(), t.getMonth(), t.getDate());
   }
 
-  async function loadData(){
+  function loadData(){
     try {
-      const result = await window.storage.get(STORAGE_KEY, false);
-      data = result && result.value ? JSON.parse(result.value) : {};
+      const raw = localStorage.getItem(STORAGE_KEY);
+      data = raw ? JSON.parse(raw) : {};
     } catch (e) {
       data = {};
     }
@@ -454,16 +454,13 @@
     render();
   }
 
-  async function saveData(){
-    saveStatus.textContent = 'Saving…';
+  function saveData(){
     try {
-      const result = await window.storage.set(STORAGE_KEY, JSON.stringify(data), false);
-      saveStatus.textContent = result ? 'Saved' : 'Could not save — try again';
-      if (result) {
-        setTimeout(()=>{ if(saveStatus.textContent === 'Saved') saveStatus.textContent = ''; }, 1200);
-      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      saveStatus.textContent = 'Saved';
+      setTimeout(()=>{ if(saveStatus.textContent === 'Saved') saveStatus.textContent = ''; }, 1200);
     } catch (e) {
-      saveStatus.textContent = 'Could not save — try again';
+      saveStatus.textContent = 'Could not save — storage may be full or disabled';
     }
   }
 
@@ -629,9 +626,9 @@
     taskInput.focus();
   }
 
-  async function saveAndRefresh(){
+  function saveAndRefresh(){
     render();
-    if (storageReady) await saveData();
+    if (storageReady) saveData();
   }
 
   document.getElementById('prevBtn').addEventListener('click', () => {
