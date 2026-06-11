@@ -4,225 +4,433 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Sai's Worklog Calendar</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%232f6f4f'/%3E%3Cpath d='M28 52 L44 68 L74 32' stroke='white' stroke-width='10' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper: #F6F3EC;
-    --grid-line: #E1DCCD;
-    --ink: #2C2A26;
-    --ink-soft: #8A8478;
-    --stamp-green: #44614A;
-    --stamp-green-bg: #E2E9E1;
-    --stamp-red: #A6402F;
-    --card-bg: #FFFFFF;
-    --shadow: 0 8px 30px rgba(44,42,38,0.14);
+    --bg: #ffffff;
+    --bg-soft: #fbfbfa;
+    --sidebar-bg: #f7f7f5;
+    --border: #eceae6;
+    --ink: #37352f;
+    --ink-soft: #9b9a97;
+    --accent: #2f6f4f;
+    --accent-soft: #e6efe9;
+    --overdue: #d9730d;
+    --overdue-soft: #fbecdd;
+    --shadow: 0 8px 28px rgba(15,15,15,0.10);
+    --radius: 10px;
   }
 
   * { box-sizing: border-box; }
 
+  html, body {
+    height: 100%;
+  }
+
   body {
     margin: 0;
-    font-family: 'IBM Plex Mono', monospace;
-    background: var(--paper);
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-soft);
     color: var(--ink);
-    background-image:
-      linear-gradient(var(--grid-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 28px 28px;
-    min-height: 100vh;
-    padding: 24px 16px 60px;
+    -webkit-font-smoothing: antialiased;
   }
 
-  .app {
-    max-width: 880px;
-    margin: 0 auto;
+  /* thin scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: #d9d7d2; border-radius: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  .app-shell {
+    display: grid;
+    grid-template-columns: 230px minmax(0,1fr) 250px;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "header header header"
+      "notes  calendar due"
+      "footer footer footer";
+    gap: 14px;
+    height: 100vh;
+    padding: 14px;
   }
 
-  .header {
+  /* ---------- Header ---------- */
+  .topbar {
+    grid-area: header;
     display: flex;
     align-items: baseline;
     justify-content: space-between;
     flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 18px;
-    padding-bottom: 14px;
-    border-bottom: 2px solid var(--ink);
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
   }
 
   .title {
     font-family: 'Source Serif 4', serif;
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 600;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.2px;
     margin: 0;
   }
 
   .title .underline {
     text-decoration: underline;
-    text-decoration-color: var(--stamp-green);
+    text-decoration-color: var(--accent);
     text-decoration-thickness: 3px;
     text-underline-offset: 4px;
   }
 
-  .month-nav {
+  .clock {
+    text-align: right;
+    line-height: 1.3;
+  }
+
+  .clock-date {
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .clock-time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  /* ---------- Side panels (notes + due) ---------- */
+  .panel {
+    background: var(--sidebar-bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .notes-panel { grid-area: notes; }
+  .due-panel { grid-area: due; }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-add-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--ink-soft);
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+  .panel-add-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ---------- Sticky notes ---------- */
+  .note-card {
+    border-radius: 8px;
+    padding: 10px 12px;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(15,15,15,0.05);
+    transition: box-shadow 0.15s;
+  }
+  .note-card:hover {
+    box-shadow: 0 4px 12px rgba(15,15,15,0.08);
+  }
+
+  .note-text {
+    width: 100%;
+    border: none;
+    background: transparent;
+    resize: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink);
+    overflow: hidden;
+    min-height: 22px;
+  }
+  .note-text:focus { outline: none; }
+  .note-text::placeholder { color: rgba(55,53,47,0.35); }
+
+  .note-delete {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: none;
+    border: none;
+    color: rgba(55,53,47,0.35);
+    cursor: pointer;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+    padding: 2px 4px;
+  }
+  .note-card:hover .note-delete { opacity: 1; }
+  .note-delete:hover { color: var(--overdue); }
+
+  .panel-empty {
+    color: var(--ink-soft);
+    font-size: 12px;
+    font-style: italic;
+    font-family: 'Source Serif 4', serif;
+    text-align: center;
+    padding: 18px 8px;
+  }
+
+  /* ---------- Due / overdue list ---------- */
+  .due-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--overdue-soft);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .due-item:hover {
+    transform: translateX(2px);
+  }
+
+  .due-item .due-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--overdue);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .due-item .due-text {
+    font-size: 12.5px;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+
+  /* ---------- Calendar ---------- */
+  .calendar-panel {
+    grid-area: calendar;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .calendar-toolbar {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 14px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
   }
 
   .month-label {
     font-family: 'Source Serif 4', serif;
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 600;
     min-width: 150px;
-    text-align: center;
   }
 
   .nav-btn, .today-btn {
-    font-family: 'IBM Plex Mono', monospace;
-    background: var(--card-bg);
-    border: 1px solid var(--ink);
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    border: 1px solid var(--border);
     color: var(--ink);
-    padding: 6px 10px;
+    padding: 5px 11px;
     cursor: pointer;
-    font-size: 13px;
-    border-radius: 2px;
+    font-size: 12.5px;
+    border-radius: 6px;
     transition: background 0.15s, color 0.15s;
   }
   .nav-btn:hover, .today-btn:hover {
-    background: var(--ink);
-    color: var(--paper);
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
   }
 
-  .summary-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  .month-count {
+    margin-left: auto;
     font-size: 12px;
     color: var(--ink-soft);
-    margin-bottom: 10px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-
-  .summary-row .count {
     font-family: 'Source Serif 4', serif;
     font-style: italic;
-    text-transform: none;
-    font-size: 13px;
-    color: var(--stamp-green);
   }
 
   .calendar-grid {
+    flex: 1;
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 1px;
-    background: var(--grid-line);
-    border: 1px solid var(--grid-line);
+    grid-template-rows: auto repeat(6, 1fr);
+    min-height: 0;
   }
 
   .weekday {
-    background: var(--ink);
-    color: var(--paper);
-    font-size: 11px;
+    text-align: center;
+    font-size: 10.5px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    text-align: center;
+    color: var(--ink-soft);
     padding: 8px 4px;
-    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+    font-weight: 600;
   }
 
   .day-cell {
-    background: var(--paper);
-    min-height: 92px;
-    padding: 8px;
-    position: relative;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 6px 7px;
     cursor: pointer;
-    transition: background 0.12s;
     display: flex;
     flex-direction: column;
     gap: 4px;
+    min-height: 0;
+    overflow: hidden;
+    transition: background 0.12s;
   }
-
-  .day-cell:hover {
-    background: #FBF9F4;
-  }
+  .day-cell:hover { background: var(--bg-soft); }
+  .day-cell:nth-child(7n) { border-right: none; }
 
   .day-cell.other-month {
-    opacity: 0.32;
+    background: var(--bg-soft);
+    opacity: 0.45;
     cursor: default;
   }
-  .day-cell.other-month:hover {
-    background: var(--paper);
-  }
+  .day-cell.other-month:hover { background: var(--bg-soft); }
 
   .day-number {
-    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
     font-weight: 600;
-    color: var(--ink);
     width: 22px;
     height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
   }
 
   .day-cell.today .day-number {
-    color: var(--paper);
-    background: var(--stamp-red);
+    background: var(--accent);
+    color: #fff;
     border-radius: 50%;
   }
 
-  .task-stamp {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    background: var(--stamp-green-bg);
-    color: var(--stamp-green);
-    border: 1.5px dashed var(--stamp-green);
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
+  .cell-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .cell-task {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 5px;
     font-size: 11px;
-    font-weight: 600;
-    transform: rotate(-8deg);
-  }
-
-  .task-preview {
-    font-size: 11px;
-    line-height: 1.4;
-    color: var(--ink-soft);
+    line-height: 1.3;
+    white-space: nowrap;
     overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+    color: var(--ink);
   }
 
-  .task-preview .bullet {
-    color: var(--stamp-green);
-    margin-right: 4px;
+  .cell-task .dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
   }
 
-  /* Modal */
-  .overlay {
+  .cell-task.done {
+    color: var(--ink-soft);
+    text-decoration: line-through;
+  }
+  .cell-task.done .dot { background: var(--ink-soft); }
+
+  .cell-more {
+    font-size: 10.5px;
+    color: var(--ink-soft);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: auto;
+  }
+
+  /* ---------- Quote bar ---------- */
+  .quote-bar {
+    grid-area: footer;
+    text-align: center;
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    font-family: 'Source Serif 4', serif;
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  #quoteText {
+    transition: opacity 0.4s ease;
+  }
+
+  /* ---------- Modal ---------- */
+  .day-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(44,42,38,0.4);
+    background: rgba(55,53,47,0.35);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 50;
     padding: 16px;
+    z-index: 50;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+  }
+  .day-modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
   }
 
-  .modal {
-    background: var(--card-bg);
-    border-radius: 4px;
+  .day-modal {
+    background: var(--bg);
+    border-radius: 12px;
     box-shadow: var(--shadow);
     width: 100%;
     max-width: 440px;
@@ -230,11 +438,18 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    transform: scale(0.95) translateY(10px);
+    opacity: 0;
+    transition: transform 0.25s cubic-bezier(.16,1,.3,1), opacity 0.2s ease;
+  }
+  .day-modal-overlay.open .day-modal {
+    transform: scale(1) translateY(0);
+    opacity: 1;
   }
 
   .modal-header {
     padding: 18px 20px 14px;
-    border-bottom: 1px solid var(--grid-line);
+    border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -279,14 +494,14 @@
     align-items: flex-start;
     gap: 10px;
     padding: 8px 0;
-    border-bottom: 1px solid var(--grid-line);
+    border-bottom: 1px solid var(--border);
     font-size: 13px;
   }
   .task-item:last-child { border-bottom: none; }
 
   .task-item input[type="checkbox"] {
     margin-top: 2px;
-    accent-color: var(--stamp-green);
+    accent-color: var(--accent);
     width: 15px;
     height: 15px;
     flex-shrink: 0;
@@ -299,12 +514,9 @@
     line-height: 1.5;
     cursor: text;
     padding: 1px 3px;
-    border-radius: 2px;
+    border-radius: 4px;
   }
-
-  .task-text:hover {
-    background: var(--stamp-green-bg);
-  }
+  .task-text:hover { background: var(--accent-soft); }
 
   .task-text.done {
     text-decoration: line-through;
@@ -313,18 +525,16 @@
 
   .task-edit-input {
     flex: 1;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Inter', sans-serif;
     font-size: 13px;
     line-height: 1.5;
     padding: 1px 3px;
-    border: 1px solid var(--stamp-green);
-    border-radius: 2px;
-    background: var(--card-bg);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    background: var(--bg);
     color: var(--ink);
   }
-  .task-edit-input:focus {
-    outline: none;
-  }
+  .task-edit-input:focus { outline: none; }
 
   .delete-task {
     background: none;
@@ -335,7 +545,7 @@
     padding: 0 2px;
     flex-shrink: 0;
   }
-  .delete-task:hover { color: var(--stamp-red); }
+  .delete-task:hover { color: var(--overdue); }
 
   .empty-state {
     padding: 24px 0;
@@ -350,75 +560,113 @@
     display: flex;
     gap: 8px;
     padding: 14px 20px;
-    border-top: 1px solid var(--grid-line);
+    border-top: 1px solid var(--border);
   }
 
   .add-task-row input {
     flex: 1;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'Inter', sans-serif;
     font-size: 13px;
     padding: 8px 10px;
-    border: 1px solid var(--grid-line);
-    border-radius: 2px;
-    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg-soft);
     color: var(--ink);
   }
   .add-task-row input:focus {
     outline: none;
-    border-color: var(--stamp-green);
+    border-color: var(--accent);
   }
 
   .add-btn {
-    font-family: 'IBM Plex Mono', monospace;
-    background: var(--stamp-green);
+    font-family: 'Inter', sans-serif;
+    background: var(--accent);
     color: #fff;
     border: none;
     padding: 8px 16px;
-    border-radius: 2px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
   }
   .add-btn:hover { opacity: 0.88; }
-  .add-btn:disabled { opacity: 0.5; cursor: default; }
 
   .status {
     font-size: 11px;
     color: var(--ink-soft);
     text-align: center;
-    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1100px) {
+    .app-shell {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto auto auto;
+      grid-template-areas:
+        "header"
+        "calendar"
+        "notes"
+        "due"
+        "footer";
+      height: auto;
+      min-height: 100vh;
+    }
+    .calendar-grid { min-height: 480px; }
+    .panel { max-height: 220px; }
   }
 
   @media (max-width: 600px) {
-    .day-cell { min-height: 64px; padding: 6px; }
-    .task-preview { display: none; }
-    .title { font-size: 18px; }
-    .month-label { font-size: 16px; min-width: 120px; }
+    .title { font-size: 17px; }
+    .clock-time { font-size: 15px; }
+    .cell-task { font-size: 10px; }
+    .day-cell { padding: 4px 5px; }
   }
 </style>
 </head>
 <body>
-  <div class="app">
-    <div class="header">
+  <div class="app-shell">
+    <header class="topbar">
       <h1 class="title">Sai's <span class="underline">Worklog</span> Calendar</h1>
-      <div class="month-nav">
+      <div class="clock">
+        <div class="clock-date" id="clockDate"></div>
+        <div class="clock-time" id="clockTime"></div>
+      </div>
+    </header>
+
+    <aside class="panel notes-panel">
+      <div class="panel-header">
+        <span>Notes</span>
+        <button class="panel-add-btn" id="addNoteBtn" title="Add note">+</button>
+      </div>
+      <div class="panel-body" id="notesList"></div>
+    </aside>
+
+    <main class="calendar-panel">
+      <div class="calendar-toolbar">
         <button class="nav-btn" id="prevBtn">&larr; Prev</button>
         <span class="month-label" id="monthLabel"></span>
         <button class="nav-btn" id="nextBtn">Next &rarr;</button>
         <button class="today-btn" id="todayBtn">Today</button>
+        <span class="month-count" id="monthCount"></span>
       </div>
-    </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </main>
 
-    <div class="summary-row">
-      <span id="loadingStatus">Loading entries…</span>
-      <span class="count" id="monthCount"></span>
-    </div>
+    <aside class="panel due-panel">
+      <div class="panel-header">
+        <span>Overdue</span>
+      </div>
+      <div class="panel-body" id="dueList"></div>
+    </aside>
 
-    <div class="calendar-grid" id="calendarGrid"></div>
+    <footer class="quote-bar">
+      <span id="quoteText"></span>
+    </footer>
   </div>
 
-  <div class="overlay" id="overlay" style="display:none;">
-    <div class="modal">
+  <div class="day-modal-overlay" id="overlay">
+    <div class="day-modal">
       <div class="modal-header">
         <div>
           <h2 class="modal-title" id="modalTitle"></h2>
@@ -436,16 +684,19 @@
   </div>
 
 <script>
-  const STORAGE_KEY = 'worklog-data';
-  let data = {}; // { 'YYYY-MM-DD': [{id, text, done}] }
+  /* ============ Storage keys ============ */
+  const TASKS_KEY = 'worklog-data';
+  const NOTES_KEY = 'worklog-notes';
+
+  let data = {};   // { 'YYYY-MM-DD': [{id, text, done}] }
+  let notes = [];  // [{id, text}]
   let currentDate = new Date();
   let selectedDateStr = null;
-  let storageReady = false;
 
+  /* ============ DOM refs ============ */
   const calendarGrid = document.getElementById('calendarGrid');
   const monthLabel = document.getElementById('monthLabel');
   const monthCount = document.getElementById('monthCount');
-  const loadingStatus = document.getElementById('loadingStatus');
   const overlay = document.getElementById('overlay');
   const modalTitle = document.getElementById('modalTitle');
   const modalSubtitle = document.getElementById('modalSubtitle');
@@ -453,32 +704,39 @@
   const taskInput = document.getElementById('taskInput');
   const addBtn = document.getElementById('addBtn');
   const saveStatus = document.getElementById('saveStatus');
+  const notesList = document.getElementById('notesList');
+  const dueList = document.getElementById('dueList');
 
   const WEEKDAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const FULL_WEEKDAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const NOTE_COLORS = ['#FBF3DB','#E7F3F8','#FAE4E4','#E9F3E9','#EFE7F8','#FDEBE0'];
+  const MAX_PREVIEW = 3;
 
+  /* ============ Date helpers ============ */
   function pad(n){ return n.toString().padStart(2,'0'); }
   function dateKey(y,m,d){ return `${y}-${pad(m+1)}-${pad(d)}`; }
   function todayKey(){
     const t = new Date();
     return dateKey(t.getFullYear(), t.getMonth(), t.getDate());
   }
-
-  function loadData(){
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      data = raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      data = {};
-    }
-    storageReady = true;
-    loadingStatus.textContent = '';
-    render();
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
 
+  /* ============ Persistence ============ */
+  function loadData(){
+    try {
+      const raw = localStorage.getItem(TASKS_KEY);
+      data = raw ? JSON.parse(raw) : {};
+    } catch (e) { data = {}; }
+  }
   function saveData(){
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(TASKS_KEY, JSON.stringify(data));
       saveStatus.textContent = 'Saved';
       setTimeout(()=>{ if(saveStatus.textContent === 'Saved') saveStatus.textContent = ''; }, 1200);
     } catch (e) {
@@ -486,6 +744,19 @@
     }
   }
 
+  function loadNotes(){
+    try {
+      const raw = localStorage.getItem(NOTES_KEY);
+      notes = raw ? JSON.parse(raw) : [];
+    } catch (e) { notes = []; }
+  }
+  function saveNotes(){
+    try {
+      localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+    } catch (e) { /* ignore */ }
+  }
+
+  /* ============ Calendar rendering ============ */
   function render(){
     const y = currentDate.getFullYear();
     const m = currentDate.getMonth();
@@ -506,34 +777,29 @@
 
     let totalThisMonth = 0;
 
-    // leading days from previous month
     for (let i = firstDay - 1; i >= 0; i--){
       const d = daysInPrevMonth - i;
-      const cell = buildCell(y, m-1, d, true, tKey);
-      calendarGrid.appendChild(cell);
+      calendarGrid.appendChild(buildCell(y, m-1, d, true, tKey));
     }
-    // days of this month
     for (let d = 1; d <= daysInMonth; d++){
       const key = dateKey(y, m, d);
       if (data[key] && data[key].length) totalThisMonth += data[key].length;
-      const cell = buildCell(y, m, d, false, tKey);
-      calendarGrid.appendChild(cell);
+      calendarGrid.appendChild(buildCell(y, m, d, false, tKey));
     }
-    // trailing days to fill grid (to multiple of 7)
     const totalCells = firstDay + daysInMonth;
     const trailing = (7 - (totalCells % 7)) % 7;
     for (let d = 1; d <= trailing; d++){
-      const cell = buildCell(y, m+1, d, true, tKey);
-      calendarGrid.appendChild(cell);
+      calendarGrid.appendChild(buildCell(y, m+1, d, true, tKey));
     }
 
     monthCount.textContent = totalThisMonth === 0
       ? 'No entries logged yet'
       : `${totalThisMonth} ${totalThisMonth === 1 ? 'entry' : 'entries'} logged`;
+
+    renderDueList(tKey);
   }
 
   function buildCell(y, m, d, otherMonth, tKey){
-    // normalize month overflow/underflow
     const norm = new Date(y, m, d);
     const ny = norm.getFullYear(), nm = norm.getMonth(), nd = norm.getDate();
     const key = dateKey(ny, nm, nd);
@@ -548,17 +814,27 @@
 
     const tasks = data[key] || [];
     if (tasks.length){
-      const stamp = document.createElement('div');
-      stamp.className = 'task-stamp';
-      stamp.textContent = tasks.length;
-      cell.appendChild(stamp);
+      const list = document.createElement('div');
+      list.className = 'cell-tasks';
+      tasks.slice(0, MAX_PREVIEW).forEach(t => {
+        const row = document.createElement('div');
+        row.className = 'cell-task' + (t.done ? ' done' : '');
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        const txt = document.createElement('span');
+        txt.textContent = t.text;
+        row.appendChild(dot);
+        row.appendChild(txt);
+        list.appendChild(row);
+      });
+      cell.appendChild(list);
 
-      const preview = document.createElement('div');
-      preview.className = 'task-preview';
-      preview.innerHTML = tasks.slice(0,2).map(t =>
-        `<div><span class="bullet">—</span>${escapeHtml(t.text)}</div>`
-      ).join('');
-      cell.appendChild(preview);
+      if (tasks.length > MAX_PREVIEW){
+        const more = document.createElement('div');
+        more.className = 'cell-more';
+        more.textContent = `+${tasks.length - MAX_PREVIEW} more`;
+        cell.appendChild(more);
+      }
     }
 
     if (!otherMonth){
@@ -568,27 +844,61 @@
     return cell;
   }
 
-  function escapeHtml(str){
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+  /* ============ Overdue panel ============ */
+  function renderDueList(tKey){
+    const items = [];
+    Object.keys(data).forEach(key => {
+      if (key < tKey){
+        (data[key] || []).forEach(t => {
+          if (!t.done) items.push({ key, text: t.text });
+        });
+      }
+    });
+    items.sort((a,b) => a.key.localeCompare(b.key));
+
+    dueList.innerHTML = '';
+    if (!items.length){
+      const empty = document.createElement('div');
+      empty.className = 'panel-empty';
+      empty.textContent = "Nothing overdue — you're all caught up.";
+      dueList.appendChild(empty);
+      return;
+    }
+
+    items.forEach(item => {
+      const [y,m,d] = item.key.split('-').map(Number);
+      const el = document.createElement('div');
+      el.className = 'due-item';
+
+      const dateEl = document.createElement('div');
+      dateEl.className = 'due-date';
+      dateEl.textContent = `${SHORT_MONTHS[m-1]} ${d}`;
+
+      const textEl = document.createElement('div');
+      textEl.className = 'due-text';
+      textEl.textContent = item.text;
+
+      el.appendChild(dateEl);
+      el.appendChild(textEl);
+      el.addEventListener('click', () => openModal(item.key, y, m-1, d));
+      dueList.appendChild(el);
+    });
   }
 
+  /* ============ Modal ============ */
   function openModal(key, y, m, d){
     selectedDateStr = key;
-    const dayName = WEEKDAYS[new Date(y,m,d).getDay()];
-    const fullDayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     modalTitle.textContent = `${MONTHS[m]} ${d}`;
-    modalSubtitle.textContent = `${fullDayNames[new Date(y,m,d).getDay()]} · ${y}`;
-    overlay.style.display = 'flex';
+    modalSubtitle.textContent = `${FULL_WEEKDAYS[new Date(y,m,d).getDay()]} · ${y}`;
     saveStatus.textContent = '';
     taskInput.value = '';
     renderTaskList();
-    setTimeout(()=> taskInput.focus(), 50);
+    overlay.classList.add('open');
+    setTimeout(()=> taskInput.focus(), 100);
   }
 
   function closeModal(){
-    overlay.style.display = 'none';
+    overlay.classList.remove('open');
     selectedDateStr = null;
   }
 
@@ -658,9 +968,7 @@
       if (finished) return;
       finished = true;
       const newText = input.value.trim();
-      if (newText) {
-        task.text = newText;
-      }
+      if (newText) task.text = newText;
       renderTaskList();
       saveAndRefresh();
     }
@@ -690,9 +998,220 @@
 
   function saveAndRefresh(){
     render();
-    if (storageReady) saveData();
+    saveData();
   }
 
+  /* ============ Sticky notes ============ */
+  function renderNotes(){
+    notesList.innerHTML = '';
+    if (!notes.length){
+      const empty = document.createElement('div');
+      empty.className = 'panel-empty';
+      empty.textContent = 'Nothing here yet — jot down a reminder.';
+      notesList.appendChild(empty);
+      return;
+    }
+    notes.forEach((note, idx) => {
+      const card = document.createElement('div');
+      card.className = 'note-card';
+      card.style.background = NOTE_COLORS[idx % NOTE_COLORS.length];
+
+      const textarea = document.createElement('textarea');
+      textarea.className = 'note-text';
+      textarea.value = note.text;
+      textarea.placeholder = 'Type a note…';
+      textarea.rows = 1;
+
+      const autoResize = () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight) + 'px';
+      };
+
+      textarea.addEventListener('input', () => {
+        note.text = textarea.value;
+        autoResize();
+        saveNotes();
+      });
+
+      const del = document.createElement('button');
+      del.className = 'note-delete';
+      del.textContent = '✕';
+      del.title = 'Remove note';
+      del.addEventListener('click', () => {
+        notes = notes.filter(n => n.id !== note.id);
+        saveNotes();
+        renderNotes();
+      });
+
+      card.appendChild(del);
+      card.appendChild(textarea);
+      notesList.appendChild(card);
+      autoResize();
+    });
+  }
+
+  function addNote(){
+    const note = { id: Date.now() + '-' + Math.random().toString(36).slice(2,7), text: '' };
+    notes.push(note);
+    saveNotes();
+    renderNotes();
+    const textareas = notesList.querySelectorAll('.note-text');
+    const last = textareas[textareas.length - 1];
+    if (last) last.focus();
+  }
+
+  /* ============ Live clock ============ */
+  function updateClock(){
+    const now = new Date();
+    document.getElementById('clockDate').textContent =
+      `${FULL_WEEKDAYS[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()}`;
+    document.getElementById('clockTime').textContent =
+      now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  /* ============ Anime motivation quotes ============ */
+  const QUOTES = [
+    ["I'm gonna be King of the Pirates!", "Luffy", "One Piece"],
+    ["I don't want to conquer anything — the one with the most freedom on this sea is the Pirate King.", "Luffy", "One Piece"],
+    ["Power isn't determined by your size, but by the size of your heart and dreams.", "Monkey D. Luffy", "One Piece"],
+    ["When do people really die? When they're forgotten.", "Dr. Hiluluk", "One Piece"],
+    ["If you don't take risks, you can't create a future.", "Monkey D. Luffy", "One Piece"],
+    ["A scar on the back is a swordsman's shame.", "Roronoa Zoro", "One Piece"],
+    ["I'll become stronger, no matter what it takes.", "Roronoa Zoro", "One Piece"],
+    ["The dreams of those who came before us cannot be stopped.", "Gol D. Roger", "One Piece"],
+    ["Pirates aren't loners — they set sail with their nakama.", "Nami", "One Piece"],
+    ["I'll keep getting stronger until the whole world recognizes my crew.", "Luffy", "One Piece"],
+
+    ["I refuse to give up. Ever.", "Asta", "Black Clover"],
+    ["Even if we're laughed at, our path is to keep moving forward.", "Asta", "Black Clover"],
+    ["I'm not a genius, so I'll work harder than anyone else.", "Asta", "Black Clover"],
+    ["A person's worth is decided by themselves, not by anyone else.", "Yuno", "Black Clover"],
+    ["No matter how many times I'm knocked down, I'll stand back up.", "Asta", "Black Clover"],
+    ["Power isn't a privilege only for the talented.", "Asta", "Black Clover"],
+    ["I'll become the Wizard King — that's a promise I'll never break.", "Asta", "Black Clover"],
+    ["Hard work betrays no one.", "Black Clover"],
+    ["Even with nothing, effort can still overcome anything.", "Asta", "Black Clover"],
+    ["Don't let anyone tell you what you can't become.", "Black Clover"],
+
+    ["I'll take a potato chip... and eat it!", "Light Yagami", "Death Note"],
+    ["The world is rotten, and those who make it rot deserve judgment.", "Light Yagami", "Death Note"],
+    ["I am justice.", "Light Yagami", "Death Note"],
+    ["Just as planned.", "L", "Death Note"],
+    ["Humans really are interesting creatures.", "Ryuk", "Death Note"],
+    ["Whether it's heaven or hell, I'll take you with me.", "Light Yagami", "Death Note"],
+
+    ["Believe it!", "Naruto Uzumaki", "Naruto"],
+    ["Hard work is worthless for those who don't believe in themselves.", "Naruto Uzumaki", "Naruto"],
+    ["A person grows up when they're able to overcome hardship.", "Jiraiya", "Naruto"],
+    ["I never go back on my word — that's my ninja way.", "Naruto Uzumaki", "Naruto"],
+    ["When people protect something truly precious, that's when they're strongest.", "Naruto Uzumaki", "Naruto"],
+    ["The pain of being alone — only those who've felt it can understand it.", "Gaara", "Naruto"],
+    ["Talent doesn't mean a thing — it's effort that counts.", "Rock Lee", "Naruto"],
+    ["I'll never run away, no matter what.", "Naruto Uzumaki", "Naruto"],
+
+    ["If you don't fight, you can't win.", "Eren Yeager", "Attack on Titan"],
+    ["The world is cruel, but it's also beautiful.", "Mikasa Ackerman", "Attack on Titan"],
+    ["Keep moving forward — that's the only way to survive.", "Attack on Titan"],
+    ["Tonight... we feast.", "Sasha Blouse", "Attack on Titan"],
+    ["Fight, and you might lose. Don't fight, and you've already lost.", "Attack on Titan"],
+    ["Dedicate your hearts.", "Survey Corps", "Attack on Titan"],
+
+    ["Go beyond! Plus Ultra!", "All Might", "My Hero Academia"],
+    ["It's fine to cry, but giving up is a different story.", "Tenya Iida", "My Hero Academia"],
+    ["A hero keeps moving forward even when everyone else has given up.", "All Might", "My Hero Academia"],
+    ["When you fall down, you have a choice — get up or stay down.", "Izuku Midoriya", "My Hero Academia"],
+    ["I want to be someone who saves people with a smile.", "Izuku Midoriya", "My Hero Academia"],
+    ["Have faith in your friends and keep moving forward.", "Izuku Midoriya", "My Hero Academia"],
+    ["Real heroes find a way to make the impossible possible.", "Izuku Midoriya", "My Hero Academia"],
+    ["Smash through your limits — every single day.", "My Hero Academia"],
+
+    ["Set your heart ablaze.", "Kyojuro Rengoku", "Demon Slayer"],
+    ["No matter how many people you lose, you have no choice but to keep living.", "Tanjiro Kamado", "Demon Slayer"],
+    ["Whatever happens from here, I refuse to regret the choices I make.", "Tanjiro Kamado", "Demon Slayer"],
+    ["Keep pushing forward — that's the path you've chosen.", "Demon Slayer"],
+    ["It's all right to cry, but when it counts, you have to get back up.", "Tanjiro Kamado", "Demon Slayer"],
+    ["A demon's strength is nothing against the will to protect others.", "Demon Slayer"],
+    ["Keep going until you can't — then go further still.", "Demon Slayer"],
+    ["Open the path to the future for the next generation.", "Kyojuro Rengoku", "Demon Slayer"],
+
+    ["I haven't lost yet.", "Hinata Shoyo", "Haikyuu!!"],
+    ["The view from the top is something only those who keep going can see.", "Haikyuu!!"],
+    ["There's always something you can do, right up until the end.", "Haikyuu!!"],
+    ["Flying isn't about talent — it's about never giving up.", "Hinata Shoyo", "Haikyuu!!"],
+    ["A single block won't decide the match — get up and keep playing.", "Haikyuu!!"],
+    ["Even genius needs effort to keep shining.", "Tobio Kageyama", "Haikyuu!!"],
+
+    ["It's not the face that makes someone a monster — it's the choices they make.", "Kite", "Hunter x Hunter"],
+    ["Smile, no matter how hard things get.", "Killua Zoldyck", "Hunter x Hunter"],
+    ["If you don't like your destiny, don't accept it.", "Hunter x Hunter"],
+    ["A person who can't sacrifice anything can't change anything.", "Hunter x Hunter"],
+    ["Keep your goal in sight, even when the path gets long.", "Gon Freecss", "Hunter x Hunter"],
+    ["Hard work pays off, but smart hard work pays off more.", "Hunter x Hunter"],
+
+    ["A lesson without pain is meaningless — you can't gain without sacrifice.", "Edward Elric", "Fullmetal Alchemist"],
+    ["Sometimes the things we can't change end up changing us.", "Fullmetal Alchemist"],
+    ["The world isn't perfect, but it's there for us, doing the best it can.", "Roy Mustang", "Fullmetal Alchemist"],
+    ["You can keep moving forward as long as you remember why you started.", "Fullmetal Alchemist"],
+    ["Fear isn't evil — it tells you what your weakness is, so face it and grow.", "Fullmetal Alchemist"],
+
+    ["Throughout heaven and earth, I alone am the honored one.", "Gojo Satoru", "Jujutsu Kaisen"],
+    ["It's not about whether you can — it's about whether you will.", "Yuji Itadori", "Jujutsu Kaisen"],
+    ["I'll save as many people as I can, starting with the ones in front of me.", "Yuji Itadori", "Jujutsu Kaisen"],
+    ["Don't let regret decide your choices.", "Jujutsu Kaisen"],
+    ["Keep your standards high, even when no one's watching.", "Gojo Satoru", "Jujutsu Kaisen"],
+
+    ["If I don't wield this sword, I can't protect you.", "Ichigo Kurosaki", "Bleach"],
+    ["Get up — whatever happens next, you can't face it sitting down.", "Bleach"],
+    ["Strength isn't just physical — it's the will to keep standing.", "Bleach"],
+    ["Even the smallest blade can cut through despair.", "Bleach"],
+    ["Protecting someone means being ready to bleed for them.", "Bleach"],
+
+    ["A true warrior never gives up, even when the odds are impossible.", "Goku", "Dragon Ball Z"],
+    ["I am the hope of the universe.", "Goku", "Dragon Ball Z"],
+    ["Power comes in response to a need, not a desire.", "Goku", "Dragon Ball Z"],
+    ["The harder the battle, the sweeter the victory.", "Dragon Ball Z"],
+    ["Train like your life depends on it — one day it might.", "Vegeta", "Dragon Ball Z"],
+    ["Never give up, no matter how strong your enemy seems.", "Goku", "Dragon Ball Z"],
+
+    ["Whatever happens, happens — just give it your all.", "Saitama", "One Punch Man"],
+    ["I just wanted to be strong enough to help anyone in trouble.", "Saitama", "One Punch Man"],
+    ["100 push-ups, 100 sit-ups, 100 squats, and a 10km run — every single day.", "Saitama", "One Punch Man"],
+    ["Being a hero doesn't need a reason.", "Saitama", "One Punch Man"],
+
+    ["It's not that I want to fight — it's that I have something to protect.", "Kaneki Ken", "Tokyo Ghoul"],
+    ["The world isn't wrong — it's just hard to live in.", "Tokyo Ghoul"],
+    ["You can't change who you are, but you can change what you do next.", "Tokyo Ghoul"],
+    ["Even broken, keep walking forward.", "Tokyo Ghoul"],
+
+    ["The only ones who should kill are those prepared to be killed.", "Lelouch Lamperouge", "Code Geass"],
+    ["If your path is one of suffering, you won't walk it alone.", "Lelouch Lamperouge", "Code Geass"],
+    ["A king's job is to keep his people moving forward.", "Code Geass"],
+
+    ["Our scars remind us the past was real, but the future is still ours to write.", "Natsu Dragneel", "Fairy Tail"],
+    ["I don't care if it's impossible — I'm doing it anyway.", "Natsu Dragneel", "Fairy Tail"],
+    ["Friends are the family we choose for ourselves.", "Fairy Tail"],
+    ["Guts are what make a true wizard.", "Natsu Dragneel", "Fairy Tail"],
+    ["Never lose sight of your nakama, no matter how hard the fight.", "Fairy Tail"],
+    ["The bonds we make give us the power to keep going.", "Fairy Tail"]
+  ];
+
+  let lastQuoteHour = -1;
+  function updateQuote(){
+    const hour = Math.floor(Date.now() / 3600000);
+    if (hour === lastQuoteHour) return;
+    lastQuoteHour = hour;
+    const idx = hour % QUOTES.length;
+    const [text, character, series] = QUOTES[idx];
+    const label = series ? `"${text}" — ${character}, ${series}` : `"${text}" — ${character}`;
+    const el = document.getElementById('quoteText');
+    el.style.opacity = 0;
+    setTimeout(() => {
+      el.textContent = label;
+      el.style.opacity = 1;
+    }, 300);
+  }
+
+  /* ============ Event listeners ============ */
   document.getElementById('prevBtn').addEventListener('click', () => {
     currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
     render();
@@ -709,10 +1228,18 @@
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeModal(); });
   addBtn.addEventListener('click', addTask);
   taskInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addTask(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.style.display === 'flex') closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal(); });
+  document.getElementById('addNoteBtn').addEventListener('click', addNote);
 
-  render();
+  /* ============ Init ============ */
   loadData();
+  loadNotes();
+  render();
+  renderNotes();
+  updateClock();
+  updateQuote();
+  setInterval(updateClock, 1000);
+  setInterval(updateQuote, 60000);
 </script>
 </body>
 </html>
