@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Worklog</title>
+<title>Sai's Worklog Calendar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -52,7 +52,7 @@
 
   .title {
     font-family: 'Source Serif 4', serif;
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 600;
     letter-spacing: 0.5px;
     margin: 0;
@@ -297,11 +297,33 @@
     flex: 1;
     word-break: break-word;
     line-height: 1.5;
+    cursor: text;
+    padding: 1px 3px;
+    border-radius: 2px;
+  }
+
+  .task-text:hover {
+    background: var(--stamp-green-bg);
   }
 
   .task-text.done {
     text-decoration: line-through;
     color: var(--ink-soft);
+  }
+
+  .task-edit-input {
+    flex: 1;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 1px 3px;
+    border: 1px solid var(--stamp-green);
+    border-radius: 2px;
+    background: var(--card-bg);
+    color: var(--ink);
+  }
+  .task-edit-input:focus {
+    outline: none;
   }
 
   .delete-task {
@@ -370,7 +392,7 @@
   @media (max-width: 600px) {
     .day-cell { min-height: 64px; padding: 6px; }
     .task-preview { display: none; }
-    .title { font-size: 22px; }
+    .title { font-size: 18px; }
     .month-label { font-size: 16px; min-width: 120px; }
   }
 </style>
@@ -378,7 +400,7 @@
 <body>
   <div class="app">
     <div class="header">
-      <h1 class="title">Work<span class="underline">log</span></h1>
+      <h1 class="title">Sai's <span class="underline">Worklog</span> Calendar</h1>
       <div class="month-nav">
         <button class="nav-btn" id="prevBtn">&larr; Prev</button>
         <span class="month-label" id="monthLabel"></span>
@@ -596,6 +618,8 @@
       const text = document.createElement('span');
       text.className = 'task-text' + (task.done ? ' done' : '');
       text.textContent = task.text;
+      text.title = 'Double-click to edit';
+      text.addEventListener('dblclick', () => startEditingTask(li, task));
 
       const del = document.createElement('button');
       del.className = 'delete-task';
@@ -612,6 +636,44 @@
       li.appendChild(text);
       li.appendChild(del);
       taskList.appendChild(li);
+    });
+  }
+
+  function startEditingTask(li, task){
+    const existingText = li.querySelector('.task-text');
+    if (!existingText) return;
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'task-edit-input';
+    input.value = task.text;
+    input.maxLength = 200;
+
+    li.replaceChild(input, existingText);
+    input.focus();
+    input.select();
+
+    let finished = false;
+    function commit(){
+      if (finished) return;
+      finished = true;
+      const newText = input.value.trim();
+      if (newText) {
+        task.text = newText;
+      }
+      renderTaskList();
+      saveAndRefresh();
+    }
+    function cancel(){
+      if (finished) return;
+      finished = true;
+      renderTaskList();
+    }
+
+    input.addEventListener('blur', commit);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); commit(); }
+      else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
     });
   }
 
